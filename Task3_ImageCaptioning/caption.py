@@ -1,15 +1,22 @@
-from transformers import pipeline
-from PIL import Image
+from tensorflow.keras.applications.resnet50 import ResNet50, preprocess_input, decode_predictions
+from tensorflow.keras.preprocessing import image
+import numpy as np
 
-# Load pretrained image captioning model
-captioner = pipeline("image-to-text", model="nlpconnect/vit-gpt2-image-captioning")
+# Load model
+model = ResNet50(weights='imagenet')
 
-# Load image (make sure image is in same folder)
-image = Image.open("image.jpg")
+def generate_caption(img_path):
+    img = image.load_img(img_path, target_size=(224, 224))
+    x = image.img_to_array(img)
+    x = np.expand_dims(x, axis=0)
+    x = preprocess_input(x)
 
-# Generate caption
-result = captioner(image)
+    preds = model.predict(x)
+    results = decode_predictions(preds, top=3)[0]
 
-# Print result
-print("Generated Caption:")
-print(result[0]['generated_text'])
+    print("Generated Caption:")
+    for _, label, prob in results:
+        print(f"{label} ({prob:.2f})")
+
+# Run
+generate_caption("Task3_ImageCaptioning.png")
